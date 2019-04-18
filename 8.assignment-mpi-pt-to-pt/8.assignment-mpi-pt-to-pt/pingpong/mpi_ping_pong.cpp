@@ -1,30 +1,48 @@
 #include <mpi.h>
+
+// C++ std lib
 #include <iostream>
-#include <stdio.h>
 
-int main (int argc, char* argv[]) {
+const int MASTER = 0;
 
-  if (argc < 2) {
-    std::cerr<<"usage: mpirun "<<argv[0]<<" <value>"<<std::endl;
-    return -1;
-  }
- int a = atoi(argv[1]);
- int rank;
- MPI_Init (&argc, &argv);
- MPI_Comm_rank (MPI_COMM_WORLD, &rank);
- if(rank==0){
- 	MPI_Send(&a,1,MPI_INT,1,0,MPI_COMM_WORLD);
-        MPI_Recv(&a,1,MPI_INT,1,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-	std::cout<<a<<std::endl;
- }
-else
+int main(int argc, char *argv[])
 {
-	MPI_Recv(&a,1,MPI_INT,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-	a = a+2;
-	MPI_Send(&a,1,MPI_INT,0,0,MPI_COMM_WORLD);
-}
-  
-	MPI_Finalize();
+    MPI :: Init(argc, argv);
+    MPI :: COMM_WORLD.Set_errhandler(MPI :: ERRORS_THROW_EXCEPTIONS);
 
-  return 0;
+    try {
+
+        int mes = 0;
+        int rank = MPI :: COMM_WORLD.Get_rank();
+        int n_rank = rank + 1;
+        int p_rank = rank - 1;
+        int m_rank = MPI :: COMM_WORLD.Get_size() - 1;
+
+        if (rank == MASTER) {
+            std :: cerr << "I am " << rank << std :: endl;
+
+            if (rank != m_rank)
+                while (n_rank <= m_rank) {
+
+                    std :: cerr << "send from " << rank << "| to " << n_rank << std :: endl;
+                    MPI :: COMM_WORLD.Send(&n_rank, 1, MPI :: INT, n_rank, 1);
+                    MPI :: COMM_WORLD.Recv(&mes, 1, MPI :: INT, n_rank, 1);
+                    std :: cerr << "recv from " << n_rank << "| to " << rank << std :: endl;
+                    ++n_rank;
+                }
+        } else {
+
+            MPI :: COMM_WORLD.Recv(&mes, 1, MPI :: INT, MASTER, 1);
+            std :: cerr << "I am " << rank << "| my rank from master =  " << mes <<  std :: endl;
+            std :: cerr << "send to MASTER"  << "| I'm " << rank << std :: endl;
+            MPI :: COMM_WORLD.Send(&rank, 1, MPI :: INT, MASTER, 1);
+        }
+    } catch (MPI :: Exception e) {
+
+        std::cout << "MPI ERROR: " << e.Get_error_code() \
+        << " - " << e.Get_error_string() << std :: endl;
+    }
+
+    MPI :: Finalize();
+    return 0;
 }
