@@ -210,7 +210,6 @@ int main(int argc, char* argv[]) {
   delete[] btm;
   delete[] rgt;
   delete[] lft;
-
   MPI_Finalize();
 
   return 0;
