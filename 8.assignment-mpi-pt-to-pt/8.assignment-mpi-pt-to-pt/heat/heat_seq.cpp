@@ -146,11 +146,11 @@ int main(int argc, char* argv[]) {
     double** h = sub_heat[0];
     for (long i = 0; i<sub_N; ++i)
       for (long j = 0; j<sub_N; ++j) {
-	long global_i = i + sub_N * row;
-	long global_j = j + sub_N * col;
-	h[i][j] = generate2DHeat(N, global_i, global_j);
+  long global_i = i + sub_N * row;
+  long global_j = j + sub_N * col;
+  h[i][j] = generate2DHeat(N, global_i, global_j);
       }
-	  
+    
   }
 
   showHeat(sub_heat[0], sub_N, sub_N);
@@ -180,12 +180,12 @@ int main(int argc, char* argv[]) {
      bool correct = true;
      for (long i = 0; i<sub_N; ++i)
        for (long j = 0; j<sub_N; ++j) {
-	 long global_i = i + sub_N * row;
-	 long global_j = j + sub_N * col;
-	 correct &= check2DHeat(N, global_i, global_j, h[i][j], k);
-	 if (!correct) {
-	   std::cerr<<"incorrect computation at iteration ("<<global_i<<","<<global_j<<") "<<k<<" new check"<<std::endl;
-	 }
+   long global_i = i + sub_N * row;
+   long global_j = j + sub_N * col;
+   correct &= check2DHeat(N, global_i, global_j, h[i][j], k);
+   if (!correct) {
+     std::cerr<<"incorrect computation at iteration ("<<global_i<<","<<global_j<<") "<<k<<" new check"<<std::endl;
+   }
 
        }
 
@@ -209,4 +209,3 @@ int main(int argc, char* argv[]) {
 
   return 0;
 }
-
