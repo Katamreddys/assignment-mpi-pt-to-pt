@@ -33,7 +33,7 @@ do
       for ITER in ${ITERS} ;
       do
 
-         ANSW=$(mpirun ${MPIRUN_PARAMS} -np ${NP} ./mpi_heat ${N} ${ITER} 2> .time < /dev/null)
+         ANSW=$(mpirun -mca btl ^openib ${MPIRUN_PARAMS} -np ${NP} ./mpi_heat ${N} ${ITER} 2> .time < /dev/null)
   
          if [ -z "${ANSW}" ] ;
          then
@@ -41,7 +41,7 @@ do
 	     
             test_time $(cat .time) 
          else
-            echo FAILED: "mpirun ${MPIRUN_PARAMS} -np ${NP} ./mpi_heat ${N} ${ITER}"
+            echo FAILED: "mpirun -mca btl ^openib ${MPIRUN_PARAMS} -np ${NP} ./mpi_heat ${N} ${ITER}"
             exit 1
          fi
       

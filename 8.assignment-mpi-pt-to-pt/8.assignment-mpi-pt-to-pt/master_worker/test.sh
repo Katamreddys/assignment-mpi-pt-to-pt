@@ -31,7 +31,7 @@ fi
 while read test; 
 do
     t=($test)
-    ANSW=$(mpirun -np ${t[1]} ./mpi_master_worker 1 0 10 ${t[0]} ${t[2]} 2> .time < /dev/null)
+    ANSW=$(mpirun -mca btl ^openib -np ${t[1]} ./mpi_master_worker 1 0 10 ${t[0]} ${t[2]} 2> .time < /dev/null)
 
     #correctness
     if ./../approx ${ANSW} ${t[3]};
@@ -40,7 +40,7 @@ do
 	
         test_time $(cat .time)
     else # fail
-        echo FAIL: "mpirun -np ${t[1]} ./mpi_master_worker 1 0 10 ${t[0]} ${t[2]}" should give roughly "${t[3]}" not ${ANSW}
+        echo FAIL: "mpirun -mca btl ^openib -np ${t[1]} ./mpi_master_worker 1 0 10 ${t[0]} ${t[2]}" should give roughly "${t[3]}" not ${ANSW}
         exit 1
     fi
     
