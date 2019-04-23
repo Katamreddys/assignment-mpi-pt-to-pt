@@ -1,17 +1,19 @@
-[mba-c5:140759] *** Process received signal ***
-[mba-c5:140759] Signal: Segmentation fault (11)
-[mba-c5:140759] Signal code: Address not mapped (1)
-[mba-c5:140759] Failing at address: 0x1c0
-[mba-c5:140759] [ 0] /lib64/libpthread.so.0(+0xf5d0)[0x2b7c64d365d0]
-[mba-c5:140759] [ 1] /apps/pkg/openmpi/1.10.0/rhel7_u5/gnu/lib/libopen-pal.so.13(opal_libevent2021_event_active_nolock+0x20)[0x2b7c655e7100]
-[mba-c5:140759] [ 2] /apps/pkg/openmpi/1.10.0/rhel7_u5/gnu/lib/libopen-pal.so.13(opal_libevent2021_event_base_loop+0x1146)[0x2b7c655e9896]
-[mba-c5:140759] [ 3] /apps/pkg/openmpi/1.10.0/rhel7_u5/gnu/lib/libopen-pal.so.13(opal_progress+0x98)[0x2b7c655b12b8]
-[mba-c5:140759] [ 4] /apps/pkg/openmpi/1.10.0/rhel7_u5/gnu/lib/libmpi.so.12(ompi_request_default_wait_all+0x225)[0x2b7c64273175]
-[mba-c5:140759] [ 5] /apps/pkg/openmpi/1.10.0/rhel7_u5/gnu/lib/openmpi/mca_coll_tuned.so(ompi_coll_tuned_barrier_intra_bruck+0x1a9)[0x2b7c6cf9bcf9]
-[mba-c5:140759] [ 6] /apps/pkg/openmpi/1.10.0/rhel7_u5/gnu/lib/libmpi.so.12(MPI_Barrier+0xa6)[0x2b7c64286836]
-[mba-c5:140759] [ 7] ./mpi_heat[0x408b0f]
-[mba-c5:140759] [ 8] /lib64/libc.so.6(__libc_start_main+0xf5)[0x2b7c64f653d5]
-[mba-c5:140759] [ 9] ./mpi_heat[0x409c17]
-[mba-c5:140759] *** End of error message ***
-[mba-c4.uncc.edu:03639] too many retries sending message to 0x0008:0x000148d4, giving up
-[mba-c1.uncc.edu:04975] too many retries sending message to 0x0008:0x000148d4, giving up
+[mba-c2:67391] *** Process received signal ***
+[mba-c2:67391] Signal: Segmentation fault (11)
+[mba-c2:67391] Signal code: Address not mapped (1)
+[mba-c2:67391] Failing at address: 0x1c0
+[mba-c2:67391] [ 0] /lib64/libpthread.so.0(+0xf5d0)[0x2b8e9c0145d0]
+[mba-c2:67391] [ 1] /apps/pkg/openmpi/1.10.0/rhel7_u5/gnu/lib/libopen-pal.so.13(opal_libevent2021_event_active_nolock+0x20)[0x2b8e9c8c5100]
+[mba-c2:67391] [ 2] /apps/pkg/openmpi/1.10.0/rhel7_u5/gnu/lib/libopen-pal.so.13(opal_libevent2021_event_base_loop+0x1146)[0x2b8e9c8c7896]
+[mba-c2:67391] [ 3] /apps/pkg/openmpi/1.10.0/rhel7_u5/gnu/lib/libopen-pal.so.13(opal_progress+0x98)[0x2b8e9c88f2b8]
+[mba-c2:67391] [ 4] /apps/pkg/openmpi/1.10.0/rhel7_u5/gnu/lib/libmpi.so.12(ompi_request_default_wait_all+0x225)[0x2b8e9b551175]
+[mba-c2:67391] [ 5] /apps/pkg/openmpi/1.10.0/rhel7_u5/gnu/lib/openmpi/mca_coll_tuned.so(ompi_coll_tuned_barrier_intra_bruck+0x1a9)[0x2b8ea419bcf9]
+[mba-c2:67391] [ 6] /apps/pkg/openmpi/1.10.0/rhel7_u5/gnu/lib/libmpi.so.12(MPI_Barrier+0xa6)[0x2b8e9b564836]
+[mba-c2:67391] [ 7] ./mpi_heat[0x408b0f]
+[mba-c2:67391] [ 8] /lib64/libc.so.6(__libc_start_main+0xf5)[0x2b8e9c2433d5]
+[mba-c2:67391] [ 9] ./mpi_heat[0x409c17]
+[mba-c2:67391] *** End of error message ***
+[mba-c5.uncc.edu:144941] too many retries sending message to 0x0002:0x0001028e, giving up
+[mba-c5.uncc.edu:144941] too many retries sending message to 0x0002:0x0001028e, giving up
+[mba-c5.uncc.edu:144941] too many retries sending message to 0x0002:0x0001028e, giving up
+[mba-c6.uncc.edu:15108] too many retries sending message to 0x0002:0x0001028e, giving up
