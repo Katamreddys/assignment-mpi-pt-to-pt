@@ -1,13 +1,1 @@
-[mba-c6:66322] *** Process received signal ***
-[mba-c6:66322] Signal: Segmentation fault (11)
-[mba-c6:66322] Signal code:  (128)
-[mba-c6:66322] Failing at address: (nil)
-[mba-c6:66322] [ 0] /lib64/libpthread.so.0(+0xf5d0)[0x2b6412ac75d0]
-[mba-c6:66322] [ 1] /apps/pkg/openmpi/1.10.0/rhel7_u5/gnu/lib/libopen-pal.so.13(opal_memory_ptmalloc2_int_malloc+0x19a)[0x2b641338e02a]
-[mba-c6:66322] [ 2] /apps/pkg/openmpi/1.10.0/rhel7_u5/gnu/lib/libopen-pal.so.13(opal_memory_ptmalloc2_malloc+0x99)[0x2b641338ed79]
-[mba-c6:66322] [ 3] /apps/pkg/openmpi/1.10.0/rhel7_u5/gnu/lib/openmpi/mca_btl_openib.so(+0x25759)[0x2b6417e53759]
-[mba-c6:66322] [ 4] /apps/pkg/openmpi/1.10.0/rhel7_u5/gnu/lib/openmpi/mca_btl_openib.so(+0x25fbc)[0x2b6417e53fbc]
-[mba-c6:66322] [ 5] /apps/pkg/openmpi/1.10.0/rhel7_u5/gnu/lib/openmpi/mca_btl_openib.so(+0x1d96c)[0x2b6417e4b96c]
-[mba-c6:66322] [ 6] /lib64/libpthread.so.0(+0x7dd5)[0x2b6412abfdd5]
-[mba-c6:66322] [ 7] /lib64/libc.so.6(clone+0x6d)[0x2b6412dd1ead]
-[mba-c6:66322] *** End of error message ***
+4.12674
