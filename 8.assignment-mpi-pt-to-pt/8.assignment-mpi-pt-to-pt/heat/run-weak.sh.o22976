@@ -1,0 +1,6 @@
+39500
+57000
+78000
+--------------------------------------------------------------------------
+mpirun noticed that process rank 5 with PID 0 on node mba-c3.uncc.edu exited on signal 11 (Segmentation fault).
+--------------------------------------------------------------------------
