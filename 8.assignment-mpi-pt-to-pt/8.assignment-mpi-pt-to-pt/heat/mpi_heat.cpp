@@ -17,45 +17,45 @@ extern "C" {
 }
 #endif
 
-void calculate_2d_heat(long block, double** Current, double** Previous, double* move_left, double* move_right, double* move_up, double* move_down){
+void calculate_2d_heat(long block, double** MainArray, double** firstArray, double* leftMArr, double* rightMArr, double* upArr, double* downArr){
 
   int row, col;
   
   for (row = 0; row < block; ++row) { 
     for (col = 0; col < block; ++col) {
       if(row == 0){
-    Current[row][col] = (move_up[col] + Previous[row][col-1] + Previous[row][col] + Previous[row][col+1] + Previous[row+1][col])/(static_cast<double>(5));
+    MainArray[row][col] = (upArr[col] + firstArray[row][col-1] + firstArray[row][col] + firstArray[row][col+1] + firstArray[row+1][col])/(static_cast<double>(5));
       }
       else if(row == block-1){
-    Current[row][col] = (move_down[col] + Previous[row-1][col] + Previous[row][col-1] + Previous[row][col] + Previous[row][col+1])/(static_cast<double>(5));
+    MainArray[row][col] = (downArr[col] + firstArray[row-1][col] + firstArray[row][col-1] + firstArray[row][col] + firstArray[row][col+1])/(static_cast<double>(5));
       }
       else if(col == 0){
-    Current[row][col] = (move_left[row] + Previous[row-1][col] + Previous[row][col] + Previous[row][col+1] + Previous[row+1][col])/(static_cast<double>(5));
+    MainArray[row][col] = (leftMArr[row] + firstArray[row-1][col] + firstArray[row][col] + firstArray[row][col+1] + firstArray[row+1][col])/(static_cast<double>(5));
       }
       else if(col == block-1){
-    Current[row][col] = (move_right[row] + Previous[row-1][col] + Previous[row][col-1] + Previous[row][col]+ Previous[row+1][col])/(static_cast<double>(5));
+    MainArray[row][col] = (rightMArr[row] + firstArray[row-1][col] + firstArray[row][col-1] + firstArray[row][col]+ firstArray[row+1][col])/(static_cast<double>(5));
       }
       else if(row == 0 && col == 0){
-    Current[row][col] = (move_left[row] + move_up[col] + Previous[row][col] + Previous[row][col+1] + Previous[row+1][col])/(static_cast<double>(5));
+    MainArray[row][col] = (leftMArr[row] + upArr[col] + firstArray[row][col] + firstArray[row][col+1] + firstArray[row+1][col])/(static_cast<double>(5));
       }
       else if(row == block-1 && col == 0){
-    Current[row][col] = (move_left[row] + move_down[col] + Previous[row-1][col] + Previous[row][col] + Previous[row][col+1])/(static_cast<double>(5));
+    MainArray[row][col] = (leftMArr[row] + downArr[col] + firstArray[row-1][col] + firstArray[row][col] + firstArray[row][col+1])/(static_cast<double>(5));
       }
       else if(row == 0 && col == block-1){
-    Current[row][col] = (move_right[row] + move_up[col] + Previous[row][col-1] + Previous[row][col] + Previous[row+1][col])/(static_cast<double>(5));
+    MainArray[row][col] = (rightMArr[row] + upArr[col] + firstArray[row][col-1] + firstArray[row][col] + firstArray[row+1][col])/(static_cast<double>(5));
       }
       else if(row == block-1 && col == block-1){
-    Current[row][col] = (move_right[row] + move_down[col] + Previous[row-1][col] + Previous[row][col-1] + Previous[row][col])/(static_cast<double>(5));;
+    MainArray[row][col] = (rightMArr[row] + downArr[col] + firstArray[row-1][col] + firstArray[row][col-1] + firstArray[row][col])/(static_cast<double>(5));;
       }
       else{
-    Current[row][col] = (Previous[row-1][col] + Previous[row][col-1] + Previous[row][col] + Previous[row][col+1] + Previous[row+1][col])/(static_cast<double>(5));
+    MainArray[row][col] = (firstArray[row-1][col] + firstArray[row][col-1] + firstArray[row][col] + firstArray[row][col+1] + firstArray[row+1][col])/(static_cast<double>(5));
       }
     }
   }
   
   for (row = 0; row < block; ++row) {
     for (col= 0; col < block; ++col) {
-      Previous[row][col] = Current[row][col];
+      firstArray[row][col] = MainArray[row][col];
     }
   }  
 }
@@ -78,37 +78,37 @@ int main(int argc, char* argv[]) {
  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
  MPI_Comm_size(MPI_COMM_WORLD, &size);
 
- long sqrt_procs = sqrt(size);
- long block = N/sqrt_procs;
+ long sqrtSize = sqrt(size);
+ long block = N/sqrtSize;
  
- long row_rank = rank/sqrt_procs;
- long col_rank = rank%sqrt_procs;
+ long global_ir = rank/sqrtSize;
+ long global_jr = rank%sqrtSize;
   
- double** Previous = new double*[block];
- double** Current = new double*[block];
+ double** firstArray = new double*[block];
+ double** MainArray = new double*[block];
 
  for(long i = 0;i < block; ++i){
-    Previous[i]=(double*)malloc(block * sizeof(double));
-    Current[i]=(double*)malloc(block * sizeof(double));
+    firstArray[i]=(double*)malloc(block * sizeof(double));
+    MainArray[i]=(double*)malloc(block * sizeof(double));
   }
 
 
- for (long row = row_rank*block; row < (row_rank+1)*block; row++) {
-   for (long col = col_rank*block; col < (col_rank+1)*block; col++) {
-     Current[(row-(row_rank*block))][(col-(col_rank*block))] = generate2DHeat(N, row, col);
-     Previous[(row-(row_rank*block))][(col-(col_rank*block))] = Current[(row-(row_rank*block))][(col-(col_rank*block))];
+ for (long global_i = global_ir*block; global_i < (global_ir+1)*block; global_i++) {
+   for (long global_j = global_jr*block; global_j < (global_jr+1)*block; global_j++) {
+     MainArray[(global_i-(global_ir*block))][(global_j-(global_jr*block))] = generate2DHeat(N, global_i, global_j);
+     firstArray[(global_i-(global_ir*block))][(global_j-(global_jr*block))] = MainArray[(global_i-(global_ir*block))][(global_j-(global_jr*block))];
    }
  }
 
  MPI_Request* request;
  MPI_Status* status;
   
- double* send_left = new double[block];
- double* move_left = new double[block];
- double* send_right = new double[block];
- double* move_right = new double[block];
- double* move_up = new double[block];
- double* move_down = new double[block]; 
+ double* leftSArr = new double[block];
+ double* leftMArr = new double[block];
+ double* rightSArr = new double[block];
+ double* rightMArr = new double[block];
+ double* upArr = new double[block];
+ double* downArr = new double[block]; 
 
   MPI_Barrier(MPI_COMM_WORLD);
   
@@ -117,163 +117,163 @@ int main(int argc, char* argv[]) {
   for(long iter = 1; iter <= K; ++iter){
 
     for(long i = 0;i<block;i++){
-      move_left[i]=Previous[i][0];
-      move_right[i]=Previous[i][(block-1)];
-      move_up[i]=Previous[0][i];
-      move_down[i]=Previous[(block-1)][i];
+      leftMArr[i]=firstArray[i][0];
+      rightMArr[i]=firstArray[i][(block-1)];
+      upArr[i]=firstArray[0][i];
+      downArr[i]=firstArray[(block-1)][i];
     }
     
     if(size == 1){  
       
-      calculate_2d_heat(block, Current, Previous, move_left, move_right, move_up, move_down);
+      calculate_2d_heat(block, MainArray, firstArray, leftMArr, rightMArr, upArr, downArr);
 
-      check2DHeat(Current, block, rank, sqrt_procs, iter);
+      check2DHeat(MainArray, block, rank, sqrtSize, iter);
       
     }
     else{
       
-      if(row_rank == 0 && col_rank == 0){
+      if(global_ir == 0 && global_jr == 0){
     
     for(long i = 0; i < block; i++){
-      send_right[i] = Previous[i][block-1];
+      rightSArr[i] = firstArray[i][block-1];
     }
 
     request = new MPI_Request[4];
     status = new MPI_Status[4];
 
-    MPI_Isend(send_right, block, MPI_DOUBLE, rank+1, 0, MPI_COMM_WORLD, &request[0]);
-    MPI_Isend(Previous[block-1], block, MPI_DOUBLE, rank+sqrt_procs, 0, MPI_COMM_WORLD, &request[1]);
-    MPI_Irecv(move_right, block, MPI_DOUBLE, rank+1, 0, MPI_COMM_WORLD, &request[2]);
-    MPI_Irecv(move_down, block, MPI_DOUBLE, rank+sqrt_procs, 0, MPI_COMM_WORLD, &request[3]);
+    MPI_Isend(rightSArr, block, MPI_DOUBLE, rank+1, 0, MPI_COMM_WORLD, &request[0]);
+    MPI_Isend(firstArray[block-1], block, MPI_DOUBLE, rank+sqrtSize, 0, MPI_COMM_WORLD, &request[1]);
+    MPI_Irecv(rightMArr, block, MPI_DOUBLE, rank+1, 0, MPI_COMM_WORLD, &request[2]);
+    MPI_Irecv(downArr, block, MPI_DOUBLE, rank+sqrtSize, 0, MPI_COMM_WORLD, &request[3]);
 
     MPI_Waitall(4, request, status);
       }
       
-      else if(row_rank == 0 && col_rank == (sqrt_procs-1)){
+      else if(global_ir == 0 && global_jr == (sqrtSize-1)){
     
     for(long i = 0; i < block; i++){
-      send_left[i] = Previous[i][0];
+      leftSArr[i] = firstArray[i][0];
     }
 
     request = new MPI_Request[4];
     status = new MPI_Status[4];
 
-    MPI_Isend(send_left, block, MPI_DOUBLE, rank-1, 0, MPI_COMM_WORLD, &request[0]);
-    MPI_Isend(Previous[block-1], block, MPI_DOUBLE, rank+sqrt_procs, 0, MPI_COMM_WORLD, &request[1]);
-    MPI_Irecv(move_left, block, MPI_DOUBLE, rank-1, 0, MPI_COMM_WORLD, &request[2]);
-    MPI_Irecv(move_down, block, MPI_DOUBLE, rank+sqrt_procs, 0, MPI_COMM_WORLD, &request[3]);
+    MPI_Isend(leftSArr, block, MPI_DOUBLE, rank-1, 0, MPI_COMM_WORLD, &request[0]);
+    MPI_Isend(firstArray[block-1], block, MPI_DOUBLE, rank+sqrtSize, 0, MPI_COMM_WORLD, &request[1]);
+    MPI_Irecv(leftMArr, block, MPI_DOUBLE, rank-1, 0, MPI_COMM_WORLD, &request[2]);
+    MPI_Irecv(downArr, block, MPI_DOUBLE, rank+sqrtSize, 0, MPI_COMM_WORLD, &request[3]);
     
     MPI_Waitall(4, request, status);
       }
       
-      else if(row_rank == (sqrt_procs-1) && col_rank == 0){
+      else if(global_ir == (sqrtSize-1) && global_jr == 0){
     
     for(long i = 0; i < block; i++){
-      send_right[i] = Previous[i][block-1];
+      rightSArr[i] = firstArray[i][block-1];
     }
 
     request = new MPI_Request[4];
     status = new MPI_Status[4];
 
-    MPI_Isend(Previous[0], block, MPI_DOUBLE, rank-sqrt_procs, 0, MPI_COMM_WORLD, &request[0]);
-    MPI_Isend(send_right, block, MPI_DOUBLE, rank+1, 0, MPI_COMM_WORLD, &request[1]);
-    MPI_Irecv(move_up, block, MPI_DOUBLE, rank-sqrt_procs, 0, MPI_COMM_WORLD, &request[2]);
-    MPI_Irecv(move_right, block, MPI_DOUBLE, rank+1, 0, MPI_COMM_WORLD, &request[3]);
+    MPI_Isend(firstArray[0], block, MPI_DOUBLE, rank-sqrtSize, 0, MPI_COMM_WORLD, &request[0]);
+    MPI_Isend(rightSArr, block, MPI_DOUBLE, rank+1, 0, MPI_COMM_WORLD, &request[1]);
+    MPI_Irecv(upArr, block, MPI_DOUBLE, rank-sqrtSize, 0, MPI_COMM_WORLD, &request[2]);
+    MPI_Irecv(rightMArr, block, MPI_DOUBLE, rank+1, 0, MPI_COMM_WORLD, &request[3]);
     
     MPI_Waitall(4, request, status);
       }
       
-      else if(row_rank == (sqrt_procs - 1) && col_rank == (sqrt_procs - 1)){
+      else if(global_ir == (sqrtSize - 1) && global_jr == (sqrtSize - 1)){
     
     for(long i = 0; i < block; i++){
-      send_left[i] = Previous[i][0];
+      leftSArr[i] = firstArray[i][0];
     }
 
     request = new MPI_Request[4];
     status = new MPI_Status[4];
 
-    MPI_Isend(Previous[0], block, MPI_DOUBLE, rank-sqrt_procs, 0, MPI_COMM_WORLD, &request[0]);
-    MPI_Isend(send_left, block, MPI_DOUBLE, rank-1, 0, MPI_COMM_WORLD, &request[1]);
-    MPI_Irecv(move_up, block, MPI_DOUBLE, rank-sqrt_procs, 0, MPI_COMM_WORLD, &request[2]);
-    MPI_Irecv(move_left, block, MPI_DOUBLE, rank-1, 0, MPI_COMM_WORLD, &request[3]);
+    MPI_Isend(firstArray[0], block, MPI_DOUBLE, rank-sqrtSize, 0, MPI_COMM_WORLD, &request[0]);
+    MPI_Isend(leftSArr, block, MPI_DOUBLE, rank-1, 0, MPI_COMM_WORLD, &request[1]);
+    MPI_Irecv(upArr, block, MPI_DOUBLE, rank-sqrtSize, 0, MPI_COMM_WORLD, &request[2]);
+    MPI_Irecv(leftMArr, block, MPI_DOUBLE, rank-1, 0, MPI_COMM_WORLD, &request[3]);
 
     MPI_Waitall(4, request, status);
       }
       
-      else if(row_rank == 0){
+      else if(global_ir == 0){
     
     for(long i = 0; i < block; i++){
-      send_left[i] = Previous[i][0];
-      send_right[i] = Previous[i][block-1]; 
+      leftSArr[i] = firstArray[i][0];
+      rightSArr[i] = firstArray[i][block-1]; 
     }
 
     request = new MPI_Request[6];
     status = new MPI_Status[6];
 
-    MPI_Isend(Previous[block-1], block, MPI_DOUBLE, rank+sqrt_procs, 0, MPI_COMM_WORLD, &request[0]);
-    MPI_Isend(send_left, block, MPI_DOUBLE, rank-1, 0, MPI_COMM_WORLD, &request[1]);
-    MPI_Isend(send_right, block, MPI_DOUBLE, rank+1, 0, MPI_COMM_WORLD, &request[2]);
-    MPI_Irecv(move_down, block, MPI_DOUBLE, rank+sqrt_procs, 0, MPI_COMM_WORLD, &request[3]);
-    MPI_Irecv(move_left, block, MPI_DOUBLE, rank-1, 0, MPI_COMM_WORLD, &request[4]);
-    MPI_Irecv(move_right, block, MPI_DOUBLE, rank+1, 0, MPI_COMM_WORLD, &request[5]);
+    MPI_Isend(firstArray[block-1], block, MPI_DOUBLE, rank+sqrtSize, 0, MPI_COMM_WORLD, &request[0]);
+    MPI_Isend(leftSArr, block, MPI_DOUBLE, rank-1, 0, MPI_COMM_WORLD, &request[1]);
+    MPI_Isend(rightSArr, block, MPI_DOUBLE, rank+1, 0, MPI_COMM_WORLD, &request[2]);
+    MPI_Irecv(downArr, block, MPI_DOUBLE, rank+sqrtSize, 0, MPI_COMM_WORLD, &request[3]);
+    MPI_Irecv(leftMArr, block, MPI_DOUBLE, rank-1, 0, MPI_COMM_WORLD, &request[4]);
+    MPI_Irecv(rightMArr, block, MPI_DOUBLE, rank+1, 0, MPI_COMM_WORLD, &request[5]);
     
     MPI_Waitall(6, request, status);
       }
       
-      else if(row_rank == (sqrt_procs-1)){
+      else if(global_ir == (sqrtSize-1)){
     
     for(long i = 0; i < block; i++){
-      send_left[i] = Previous[i][0];
-      send_right[i] = Previous[i][block-1]; 
+      leftSArr[i] = firstArray[i][0];
+      rightSArr[i] = firstArray[i][block-1]; 
     }
 
     request = new MPI_Request[6];
     status = new MPI_Status[6];
 
-    MPI_Isend(Previous[0], block, MPI_DOUBLE, rank-sqrt_procs, 0, MPI_COMM_WORLD, &request[0]);
-    MPI_Isend(send_left, block, MPI_DOUBLE, rank-1, 0, MPI_COMM_WORLD, &request[1]);
-    MPI_Isend(send_right, block, MPI_DOUBLE, rank+1, 0, MPI_COMM_WORLD, &request[2]);
-    MPI_Irecv(move_up, block, MPI_DOUBLE, rank-sqrt_procs, 0, MPI_COMM_WORLD, &request[3]);
-    MPI_Irecv(move_left, block, MPI_DOUBLE, rank-1, 0, MPI_COMM_WORLD, &request[4]);
-    MPI_Irecv(move_right, block, MPI_DOUBLE, rank+1, 0, MPI_COMM_WORLD, &request[5]);
+    MPI_Isend(firstArray[0], block, MPI_DOUBLE, rank-sqrtSize, 0, MPI_COMM_WORLD, &request[0]);
+    MPI_Isend(leftSArr, block, MPI_DOUBLE, rank-1, 0, MPI_COMM_WORLD, &request[1]);
+    MPI_Isend(rightSArr, block, MPI_DOUBLE, rank+1, 0, MPI_COMM_WORLD, &request[2]);
+    MPI_Irecv(upArr, block, MPI_DOUBLE, rank-sqrtSize, 0, MPI_COMM_WORLD, &request[3]);
+    MPI_Irecv(leftMArr, block, MPI_DOUBLE, rank-1, 0, MPI_COMM_WORLD, &request[4]);
+    MPI_Irecv(rightMArr, block, MPI_DOUBLE, rank+1, 0, MPI_COMM_WORLD, &request[5]);
 
     MPI_Waitall(6, request, status);
       }
       
       
-      else if(col_rank == 0){
+      else if(global_jr == 0){
 
     for(long i = 0; i < block; i++){
-      send_right[i] = Previous[i][block-1]; 
+      rightSArr[i] = firstArray[i][block-1]; 
     }
 
     request = new MPI_Request[6];
     status = new MPI_Status[6];
     
-    MPI_Irecv(move_down, block, MPI_DOUBLE, rank+sqrt_procs, 0, MPI_COMM_WORLD, &request[0]);
-    MPI_Irecv(move_up, block, MPI_DOUBLE, rank-sqrt_procs, 0, MPI_COMM_WORLD, &request[1]);
-    MPI_Irecv(move_right, block, MPI_DOUBLE, rank+1, 0, MPI_COMM_WORLD, &request[2]);
-    MPI_Isend(Previous[block-1], block, MPI_DOUBLE, rank+sqrt_procs, 0, MPI_COMM_WORLD, &request[3]);
-    MPI_Isend(Previous[0], block, MPI_DOUBLE, rank-sqrt_procs, 0, MPI_COMM_WORLD, &request[4]);
-    MPI_Isend(send_right, block, MPI_DOUBLE, rank+1, 0, MPI_COMM_WORLD, &request[5]);
+    MPI_Irecv(downArr, block, MPI_DOUBLE, rank+sqrtSize, 0, MPI_COMM_WORLD, &request[0]);
+    MPI_Irecv(upArr, block, MPI_DOUBLE, rank-sqrtSize, 0, MPI_COMM_WORLD, &request[1]);
+    MPI_Irecv(rightMArr, block, MPI_DOUBLE, rank+1, 0, MPI_COMM_WORLD, &request[2]);
+    MPI_Isend(firstArray[block-1], block, MPI_DOUBLE, rank+sqrtSize, 0, MPI_COMM_WORLD, &request[3]);
+    MPI_Isend(firstArray[0], block, MPI_DOUBLE, rank-sqrtSize, 0, MPI_COMM_WORLD, &request[4]);
+    MPI_Isend(rightSArr, block, MPI_DOUBLE, rank+1, 0, MPI_COMM_WORLD, &request[5]);
     MPI_Waitall(6, request, status);
       }
 
-      else if(col_rank == (sqrt_procs-1)){
+      else if(global_jr == (sqrtSize-1)){
     
     for(long i = 0; i < block; i++){
-      send_left[i]=Previous[i][0];
+      leftSArr[i]=firstArray[i][0];
     }
     
     request = new MPI_Request[6];
     status = new MPI_Status[6];
 
-    MPI_Isend(Previous[0], block, MPI_DOUBLE, rank-sqrt_procs, 0, MPI_COMM_WORLD, &request[0]);
-    MPI_Isend(Previous[block-1], block, MPI_DOUBLE, rank+sqrt_procs, 0, MPI_COMM_WORLD, &request[1]);
-    MPI_Isend(send_left, block, MPI_DOUBLE, rank-1, 0, MPI_COMM_WORLD, &request[2]);
-    MPI_Irecv(move_down, block, MPI_DOUBLE, rank+sqrt_procs, 0, MPI_COMM_WORLD, &request[3]);
-    MPI_Irecv(move_up, block, MPI_DOUBLE, rank-sqrt_procs, 0, MPI_COMM_WORLD, &request[4]);
-    MPI_Irecv(move_left, block, MPI_DOUBLE, rank-1, 0, MPI_COMM_WORLD, &request[5]);
+    MPI_Isend(firstArray[0], block, MPI_DOUBLE, rank-sqrtSize, 0, MPI_COMM_WORLD, &request[0]);
+    MPI_Isend(firstArray[block-1], block, MPI_DOUBLE, rank+sqrtSize, 0, MPI_COMM_WORLD, &request[1]);
+    MPI_Isend(leftSArr, block, MPI_DOUBLE, rank-1, 0, MPI_COMM_WORLD, &request[2]);
+    MPI_Irecv(downArr, block, MPI_DOUBLE, rank+sqrtSize, 0, MPI_COMM_WORLD, &request[3]);
+    MPI_Irecv(upArr, block, MPI_DOUBLE, rank-sqrtSize, 0, MPI_COMM_WORLD, &request[4]);
+    MPI_Irecv(leftMArr, block, MPI_DOUBLE, rank-1, 0, MPI_COMM_WORLD, &request[5]);
     
     MPI_Waitall(6, request, status);
       }
@@ -281,8 +281,8 @@ int main(int argc, char* argv[]) {
       else{
     
     for(long i = 0; i < block; i++){
-      send_left[i]=Previous[i][0];
-      send_right[i]=Previous[i][block-1];
+      leftSArr[i]=firstArray[i][0];
+      rightSArr[i]=firstArray[i][block-1];
     }
 
     MPI_Request* req_r;
@@ -291,21 +291,21 @@ int main(int argc, char* argv[]) {
     req_s = new MPI_Request[4];
     status = new MPI_Status[4];
     
-    MPI_Irecv(move_up, block, MPI_DOUBLE, rank-sqrt_procs, 0, MPI_COMM_WORLD, &req_r[0]);
-    MPI_Irecv(move_down, block, MPI_DOUBLE, rank+sqrt_procs, 0, MPI_COMM_WORLD, &req_r[1]);
-    MPI_Irecv(move_left, block, MPI_DOUBLE, rank-1, 0, MPI_COMM_WORLD, &req_r[2]);
-    MPI_Irecv(move_right, block, MPI_DOUBLE, rank+1, 0, MPI_COMM_WORLD, &req_r[3]);
-    MPI_Isend(Previous[0], block, MPI_DOUBLE, rank-sqrt_procs, 0, MPI_COMM_WORLD, &req_s[0]);
-    MPI_Isend(Previous[block-1], block, MPI_DOUBLE, rank+sqrt_procs, 0, MPI_COMM_WORLD, &req_s[1]);
-    MPI_Isend(send_left, block, MPI_DOUBLE, rank-1, 0, MPI_COMM_WORLD, &req_s[2]);
-    MPI_Isend(send_right, block, MPI_DOUBLE, rank+1, 0, MPI_COMM_WORLD, &req_s[3]);
+    MPI_Irecv(upArr, block, MPI_DOUBLE, rank-sqrtSize, 0, MPI_COMM_WORLD, &req_r[0]);
+    MPI_Irecv(downArr, block, MPI_DOUBLE, rank+sqrtSize, 0, MPI_COMM_WORLD, &req_r[1]);
+    MPI_Irecv(leftMArr, block, MPI_DOUBLE, rank-1, 0, MPI_COMM_WORLD, &req_r[2]);
+    MPI_Irecv(rightMArr, block, MPI_DOUBLE, rank+1, 0, MPI_COMM_WORLD, &req_r[3]);
+    MPI_Isend(firstArray[0], block, MPI_DOUBLE, rank-sqrtSize, 0, MPI_COMM_WORLD, &req_s[0]);
+    MPI_Isend(firstArray[block-1], block, MPI_DOUBLE, rank+sqrtSize, 0, MPI_COMM_WORLD, &req_s[1]);
+    MPI_Isend(leftSArr, block, MPI_DOUBLE, rank-1, 0, MPI_COMM_WORLD, &req_s[2]);
+    MPI_Isend(rightSArr, block, MPI_DOUBLE, rank+1, 0, MPI_COMM_WORLD, &req_s[3]);
     MPI_Waitall(4, req_r, status);
       }
       
-      calculate_2d_heat(block, Current, Previous, move_left, move_right, move_up, move_down);
+      calculate_2d_heat(block, MainArray, firstArray, leftMArr, rightMArr, upArr, downArr);
       
       
-      check2DHeat(Current, block, rank, sqrt_procs, iter);
+      check2DHeat(MainArray, block, rank, sqrtSize, iter);
       
     }
     
@@ -322,17 +322,17 @@ int main(int argc, char* argv[]) {
   }
 
   for(long i = 0; i< block; i++){
-    delete Previous[i];
-    delete Current[i];
+    delete firstArray[i];
+    delete MainArray[i];
   }
-  delete[] Current;
-  delete[] Previous;
-  delete[] send_left;
-  delete[] move_left;
-  delete[] send_right;
-  delete[] move_right;
-  delete[] move_up;
-  delete[] move_down;
+  delete[] MainArray;
+  delete[] firstArray;
+  delete[] leftSArr;
+  delete[] leftMArr;
+  delete[] rightSArr;
+  delete[] rightMArr;
+  delete[] upArr;
+  delete[] downArr;
   
   return 0;
 }

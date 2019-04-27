@@ -46,22 +46,22 @@ return -1;
 }
 
 
-int rank, numprocs;
+int mpi_rank, proc_count;
 
 MPI_Init(&argc, &argv);
 
-MPI_Status status;
+MPI_Status mpi_status;
 
-MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
 
-MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
-
-
+MPI_Comm_size(MPI_COMM_WORLD, &proc_count);
 
 
-double x,integration;
 
-int fid = atoi(argv[1]);
+
+double x,total_sum;
+
+int function_id = atoi(argv[1]);
 
 int a = atoi(argv[2]);
 
@@ -71,52 +71,52 @@ int n = atoi(argv[4]);
 
 int intensity = atoi(argv[5]);
 
-int first = 0, last = 0, end_proc = -1;
+int begin = 0, stop = 0, proc_stop = -1;
 
-auto start = chrono::high_resolution_clock::now();
-
-
-int count = numprocs;
-
-int granularity = (n/numprocs)/8;
+auto time_start = chrono::high_resolution_clock::now();
 
 
-if(numprocs > 1){
+int message_count = proc_count;
+
+int granularity = (n/proc_count)/8;
+
+
+if(proc_count > 1){
 
 //for the Master code
 
-if(rank == 0){
+if(mpi_rank == 0){
 
-for(int i = 1; i < numprocs; ++i)
+for(int i = 1; i < proc_count; ++i)
 {
 
 int j = i;
 
-	if(n >= first + granularity)
+	if(n >= begin + granularity)
 	{
 
-		MPI_Send(&first, 1, MPI_INT, i, j, MPI_COMM_WORLD);
+		MPI_Send(&begin, 1, MPI_INT, i, j, MPI_COMM_WORLD);
 
-		first += granularity;
+		begin += granularity;
 
 	}
 
 	else{
 
-		if(count == numprocs)
+		if(message_count == proc_count)
 		{
 
-			MPI_Send(&first, 1, MPI_INT, i, j, MPI_COMM_WORLD);
+			MPI_Send(&begin, 1, MPI_INT, i, j, MPI_COMM_WORLD);
 
-			count--;
+			message_count--;
 
 		}
 
 		else{
 
-			count--;
+			message_count--;
 
-			MPI_Send(&end_proc, 1, MPI_INT, i, j, MPI_COMM_WORLD);
+			MPI_Send(&proc_stop, 1, MPI_INT, i, j, MPI_COMM_WORLD);
 
 		    }
 
@@ -124,36 +124,36 @@ int j = i;
 
 }
 
-while(count != 1)
+while(message_count != 1)
 {
 
-double sum = 0.0;
+double partial_sum = 0.0;
 
-MPI_Recv(&sum, 1, MPI_DOUBLE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+MPI_Recv(&partial_sum, 1, MPI_DOUBLE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &mpi_status);
 
-integration += sum;
+total_sum += partial_sum;
 
-	if(first < n)
+	if(begin < n)
 	{
 
-		MPI_Send(&first, 1, MPI_INT, status.MPI_SOURCE, rank, MPI_COMM_WORLD);
+		MPI_Send(&begin, 1, MPI_INT, mpi_status.MPI_SOURCE, mpi_rank, MPI_COMM_WORLD);
 
-		first += granularity;
+		begin += granularity;
 
 	}
 
 	else
 	{
 
-		count--;
+		message_count--;
 
-		MPI_Send(&end_proc, 1, MPI_INT, status.MPI_SOURCE, rank, MPI_COMM_WORLD);
+		MPI_Send(&proc_stop, 1, MPI_INT, mpi_status.MPI_SOURCE, mpi_rank, MPI_COMM_WORLD);
 
 	}
 
 }
 
-integration = integration * ((float)(b-a)/n);
+total_sum = total_sum * ((float)(b-a)/n);
 
 }
 
@@ -164,48 +164,48 @@ integration = integration * ((float)(b-a)/n);
 		while(1)
 		{
 
-			double sum = 0.0;
+			double partial_sum = 0.0;
 
-			MPI_Recv(&first, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+			MPI_Recv(&begin, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &mpi_status);
 
-			if(first == -1)
+			if(begin == -1)
 
 				break;
 
-			last = first + granularity;
+			stop = begin + granularity;
 
-			if(last > n)
+			if(stop > n)
 
-				last = n;
+				stop = n;
 
-	for(int i = first; i < last; ++i)
+	for(int i = begin; i < stop; ++i)
 	{
 
 		x = (a + (i + 0.5) * ((float)(b-a)/n));
 
-		switch(fid){
+		switch(function_id){
 
 			case 1:
 
-				sum += f1(x, intensity);
+				partial_sum += f1(x, intensity);
 	
 				break;
 
 			case 2:
 
-				sum += f2(x, intensity);
+				partial_sum += f2(x, intensity);
 
 				break;
 
 			case 3:
 
-				sum += f3(x, intensity);
+				partial_sum += f3(x, intensity);
 
 				break;
 
 			case 4:
 
-				sum += f4(x, intensity);
+				partial_sum += f4(x, intensity);
 
 				break;
 
@@ -215,7 +215,7 @@ integration = integration * ((float)(b-a)/n);
 
 	}
 
-MPI_Send(&sum, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+MPI_Send(&partial_sum, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
 
 }
 
@@ -228,35 +228,35 @@ else
 
 {
 
-double sum = 0.0;
+double partial_sum = 0.0;
 
 	for(int i = 0; i < n; ++i){
 
 		x = (a + (i + 0.5) * ((float)(b-a)/n));
 
-		switch(fid){
+		switch(function_id){
 
 			case 1:
 
-				sum += f1(x, intensity);
+				partial_sum += f1(x, intensity);
 
 				break;
 
 			case 2:
 
-				sum += f2(x, intensity);
+				partial_sum += f2(x, intensity);
 
 				break;
 
 			case 3:
 
-				sum += f3(x, intensity);
+				partial_sum += f3(x, intensity);
 	
 				break;
 
 			case 4:
 
-				sum += f4(x, intensity);
+				partial_sum += f4(x, intensity);
 
 				break;
 
@@ -266,17 +266,17 @@ double sum = 0.0;
 
 	}
 
-integration = sum * ((float)(b-a)/n);
+total_sum = partial_sum * ((float)(b-a)/n);
 
 }
 
-auto end = chrono::high_resolution_clock::now() - start;
+auto time_end = chrono::high_resolution_clock::now() - time_start;
 
-if(rank == 0){
+if(mpi_rank == 0){
 
-cout << integration << endl;
+cout << total_sum << endl;
 
-cerr << chrono::duration<double>(end).count()<< endl;
+cerr << chrono::duration<double>(time_end).count()<< endl;
 
 }
 
