@@ -9,17 +9,13 @@ using namespace std;
 extern "C" {
 #endif
 
+  double generate2DHeat(long n, long global_i, long global_j);
+
   int check2DHeat(double** H, long n, long rank, long P, long k); 
 
 #ifdef __cplusplus
 }
 #endif
-
-double genH0(long row, long col, long n) {
-  double val = (double)(col == (n/2));
-  return val;
-}
-
 
 void calculate_2d_heat(long block, double** Current, double** Previous, double* move_left, double* move_right, double* move_up, double* move_down){
 
@@ -99,7 +95,7 @@ int main(int argc, char* argv[]) {
 
  for (long row = row_rank*block; row < (row_rank+1)*block; row++) {
    for (long col = col_rank*block; col < (col_rank+1)*block; col++) {
-     Current[(row-(row_rank*block))][(col-(col_rank*block))] = genH0(row, col, N);
+     Current[(row-(row_rank*block))][(col-(col_rank*block))] = generate2DHeat(N, row, col);
      Previous[(row-(row_rank*block))][(col-(col_rank*block))] = Current[(row-(row_rank*block))][(col-(col_rank*block))];
    }
  }
