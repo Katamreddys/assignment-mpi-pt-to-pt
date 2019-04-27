@@ -1,47 +1,46 @@
 #include <mpi.h>
-
-// C++ std lib
 #include <iostream>
+using namespace std;
 
-const int MASTER = 0;
+int main (int argc, char* argv[]) {
 
-int main(int argc, char *argv[])
-{
-    MPI :: Init(argc, argv);
-    MPI :: COMM_WORLD.Set_errhandler(MPI :: ERRORS_THROW_EXCEPTIONS);
+  if (argc < 2) {
+    std::cerr<<"usage: mpirun "<<argv[0]<<" <element>"<<std::endl;
+    return -1;
+  }
+  int element;
+  MPI_Init(&argc,&argv);
+  element = stoi(argv[1]);
 
-    try {
+  // rank and size
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  int size;
+  MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-        int message = 0;
-        int mpi_rank = MPI :: COMM_WORLD.Get_rank();
-        int rankN = mpi_rank + 1;
-        int rankM = MPI :: COMM_WORLD.Get_size() - 1;
+  int number;
+  if (rank == 0) {
+      //element
+    number = element;
+      //send and receive
+    MPI_Send(&number, 1, MPI_INT, 1, 0, MPI_COMM_WORLD);
+    cout<<"Sending from 0 to 1"<<endl;
+    MPI_Recv(&number, 1, MPI_INT, 1, 0, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+    cout<<"Received after adding"<<endl;
+    cout<<"After adding 2: " <<number<<endl;
+  } else if (rank == 1) {
+      
+      //receive add and send
+    MPI_Recv(&number, 1, MPI_INT, 0, 0, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+    cout<<"Received to 1 from 0"<<endl;
 
-        if (mpi_rank == MASTER) {
-            std :: cerr << "I am " << mpi_rank << std :: endl;
+    number = number + 2;
+    MPI_Send(&number, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+    cout<<"Sending from 1 to 0 after adding 2"<<endl;
 
-            if (mpi_rank != rankM)
-                while (rankN <= rankM) {
+  }
 
-                    std :: cerr << "send from " << mpi_rank << "| to " << rankN << std :: endl;
-                    MPI :: COMM_WORLD.Send(&rankN, 1, MPI :: INT, rankN, 1);
-                    MPI :: COMM_WORLD.Recv(&message, 1, MPI :: INT, rankN, 1);
-                    std :: cerr << "recv from " << rankN << "| to " << mpi_rank << std :: endl;
-                    ++rankN;
-                }
-        } else {
 
-            MPI :: COMM_WORLD.Recv(&message, 1, MPI :: INT, MASTER, 1);
-            std :: cerr << "I am " << mpi_rank << "| my mpi_rank from master =  " << message <<  std :: endl;
-            std :: cerr << "send to MASTER"  << "| I'm " << mpi_rank << std :: endl;
-            MPI :: COMM_WORLD.Send(&mpi_rank, 1, MPI :: INT, MASTER, 1);
-        }
-    } catch (MPI :: Exception e) {
-
-        std::cout << "MPI ERROR: " << e.Get_error_code() \
-        << " - " << e.Get_error_string() << std :: endl;
-    }
-
-    MPI :: Finalize();
-    return 0;
+  MPI_Finalize();
+  return 0;
 }
