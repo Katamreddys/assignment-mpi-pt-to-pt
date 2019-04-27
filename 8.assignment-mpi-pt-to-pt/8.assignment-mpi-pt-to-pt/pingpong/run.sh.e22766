@@ -1,5 +1,0 @@
-I am 0
-send from 0| to 1
-recv from 1| to 0
-I am 1| my rank from master =  1
-send to MASTER| I'm 1
